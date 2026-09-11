@@ -1,6 +1,6 @@
 {
   "name": "@valipireddykowshik/mcpdx",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Opinionated completeness auditor and runtime linter for Model Context Protocol (MCP) servers. Audits schemas, error boundaries, latency, and observability (Sentry/OTel) with automated AST codemod fixes.",
   "keywords": [
     "mcp",
@@ -69,6 +69,7 @@
     "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
+    "@clack/prompts": "^1.8.0",
     "commander": "^12.1.0",
     "diff": "^7.0.0",
     "picocolors": "^1.1.1",

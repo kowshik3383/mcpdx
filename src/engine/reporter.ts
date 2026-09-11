@@ -97,7 +97,7 @@ export function formatTerminalReport(report: AuditReport): string {
       lines.push(`     ${pc.dim("Fix:")} ${pc.cyan(f.suggestedFix)}`);
     }
     if (f.fixable) {
-      lines.push(`     ${pc.green("⚡ Auto-fix available via: mcp-doctor fix")}`);
+      lines.push(`     ${pc.green("⚡ Auto-fix available: run 'npx @valipireddykowshik/mcpdx fix' or 'mcpdx fix'")}`);
     }
     lines.push("");
   };
@@ -133,6 +133,29 @@ export function formatTerminalReport(report: AuditReport): string {
   if (summary.info > 0) summaryParts.push(pc.blue(pc.bold(`${summary.info} info`)));
 
   lines.push(`Summary: ${summaryParts.join(" | ")} across ${summary.toolsAnalyzed} registered tool(s)`);
+  lines.push("");
+
+  // Actionable Next Steps Box
+  const fixableCount = findings.filter((f) => f.fixable).length;
+  lines.push(pc.bold(pc.cyan("💡 Actionable Next Steps:")));
+  if (fixableCount > 0) {
+    lines.push(
+      `  • ${pc.green("Apply Automated Fixes:")} ${pc.bold("npx @valipireddykowshik/mcpdx fix")} (${fixableCount} issue${fixableCount > 1 ? "s" : ""} can be patched automatically)`
+    );
+    lines.push(
+      `  • ${pc.dim("Preview Diff Only:")}     npx @valipireddykowshik/mcpdx fix --dry-run`
+    );
+  }
+  if (summary.warnings > 0) {
+    lines.push(
+      `  • ${pc.yellow("Fix Timeout Warnings:")} Pass AbortSignal or wrap handlers with AbortSignal.timeout(30000) to avoid client freezes.`
+    );
+  }
+  if (!report.runtimeLogsAnalyzed) {
+    lines.push(
+      `  • ${pc.blue("Behavioral Audit:")}     Run 'npx @valipireddykowshik/mcpdx init' to enable runtime call logging for dead tool & loop detection.`
+    );
+  }
   lines.push("");
 
   return lines.join("\n");

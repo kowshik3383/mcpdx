@@ -2,9 +2,9 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import readline from "node:readline";
 import { Command } from "commander";
 import pc from "picocolors";
+import * as p from "@clack/prompts";
 import { detectProject } from "./detector/index.js";
 import { runChecks } from "./engine/runner.js";
 import { runFixes } from "./engine/fixer.js";
@@ -18,18 +18,15 @@ import {
 const program = new Command();
 
 program
-  .name("mcp-doctor")
+  .name("mcpdx")
   .description("Opinionated completeness auditor and runtime linter for MCP servers")
-  .version("0.1.0");
+  .version("0.1.1");
 
 function checkMcpPresence(fingerprint: ReturnType<typeof detectProject>, force?: boolean): boolean {
   if (!fingerprint.mcpDetected && fingerprint.tools.length === 0 && !force) {
-    console.log(pc.yellow("⚠️  No MCP server or tools detected in this directory."));
-    console.log(
-      pc.dim(
-        "   We looked for @modelcontextprotocol/sdk in package.json, Server / McpServer instantiations, and server.tool() definitions.\n" +
-        "   If this is an MCP repository, make sure you are in the project root, or re-run with --force."
-      )
+    p.note(
+      "We looked for @modelcontextprotocol/sdk in package.json, Server / McpServer instantiations, and server.tool() definitions.\nIf this is an MCP repository, ensure you are in the project root, or re-run with --force.",
+      "⚠️ No MCP server or tools detected"
     );
     return false;
   }
@@ -91,9 +88,7 @@ program
     }
 
     // Exit code convention:
-    // 0 = clean
-    // 1 = warnings only
-    // 2 = errors
+    // 0 = clean, 1 = warnings only, 2 = errors
     if (report.summary.errors > 0) {
       process.exitCode = 2;
     } else if (report.summary.warnings > 0) {
@@ -121,60 +116,109 @@ program
       return;
     }
 
-    const shouldApply = options.yes || options.all || options.dryRun;
-
-    if (!shouldApply && process.stdin.isTTY) {
-      const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-      });
-
-      const answer = await new Promise<string>((resolve) => {
-        rl.question(
-          pc.bold(pc.cyan("Apply recommended automated fixes to this project? [y/N]: ")),
-          (ans) => {
-            rl.close();
-            resolve(ans.trim().toLowerCase());
-          }
-        );
-      });
-
-      if (answer !== "y" && answer !== "yes") {
-        console.log(pc.dim("Aborted without making changes."));
-        return;
-      }
-    }
-
-    const results = await runFixes({
+    // Step 1: Run dry-run to discover candidate fixes
+    const previewFixes = await runFixes({
       projectDir: targetDir,
-      dryRun: Boolean(options.dryRun),
+      dryRun: true,
       ruleIds: options.rule ? [options.rule] : undefined,
     });
 
-    console.log(formatFixReport(results, Boolean(options.dryRun)));
+    if (previewFixes.length === 0) {
+      console.log(pc.cyan("ℹ No auto-fixable issues were detected in this MCP server."));
+      return;
+    }
+
+    console.log(formatFixReport(previewFixes, true));
+
+    if (options.dryRun) {
+      console.log(pc.dim("Dry-run preview complete. To write these changes to disk, run:"));
+      console.log(pc.bold(pc.green("  npx @valipireddykowshik/mcpdx fix\n")));
+      return;
+    }
+
+    let shouldApply = Boolean(options.yes || options.all);
+
+    if (!shouldApply) {
+      if (process.stdin.isTTY) {
+        p.intro(pc.bgMagenta(pc.black(" ⚡ mcpdx Auto-Fix Wizard ")));
+
+        const proceed = await p.confirm({
+          message: `Found ${previewFixes.length} fixable issue(s). Apply these changes to your code files now?`,
+          initialValue: true,
+        });
+
+        if (p.isCancel(proceed) || !proceed) {
+          p.cancel("Fix aborted. No files were modified.");
+          return;
+        }
+        shouldApply = true;
+      } else {
+        shouldApply = true;
+      }
+    }
+
+    if (shouldApply) {
+      const liveFixes = await runFixes({
+        projectDir: targetDir,
+        dryRun: false,
+        ruleIds: options.rule ? [options.rule] : undefined,
+      });
+
+      console.log(formatFixReport(liveFixes, false));
+      console.log(pc.bold(pc.green("✔ All changes successfully written to disk! Run 'mcpdx check' to verify.\n")));
+    }
   });
 
 // Subcommand 4: init
 program
   .command("init [directory]")
   .description("Scaffold mcpdoctor.config.js and runtime logging directories in an MCP project")
-  .action((dir) => {
+  .option("-y, --yes", "Skip interactive prompts and apply defaults")
+  .action(async (dir, options) => {
     const targetDir = path.resolve(dir || ".");
     const configPath = path.join(targetDir, "mcpdoctor.config.js");
     const mcpDoctorDir = path.join(targetDir, ".mcpdoctor");
 
-    console.log(pc.bold(pc.magenta("🚀 Initializing mcp-doctor configuration...")));
+    let createConfig = true;
+    let createLogging = true;
 
-    if (!fs.existsSync(mcpDoctorDir)) {
+    if (process.stdin.isTTY && !options.yes) {
+      p.intro(pc.bgMagenta(pc.black(" 🚀 mcpdx Setup Wizard ")));
+
+      const configAns = await p.confirm({
+        message: "Scaffold mcpdoctor.config.js for custom rule configuration?",
+        initialValue: true,
+      });
+
+      if (p.isCancel(configAns)) {
+        p.cancel("Setup cancelled.");
+        return;
+      }
+      createConfig = Boolean(configAns);
+
+      const loggingAns = await p.confirm({
+        message: "Enable runtime telemetry directory (.mcpdoctor/) to track dead tools & latency?",
+        initialValue: true,
+      });
+
+      if (p.isCancel(loggingAns)) {
+        p.cancel("Setup cancelled.");
+        return;
+      }
+      createLogging = Boolean(loggingAns);
+    }
+
+    if (createLogging && !fs.existsSync(mcpDoctorDir)) {
       fs.mkdirSync(mcpDoctorDir, { recursive: true });
       const sampleGitIgnore = path.join(mcpDoctorDir, ".gitignore");
       fs.writeFileSync(sampleGitIgnore, "# Ignore runtime logs\ncalls.jsonl\n", "utf8");
       console.log(`  ${pc.green("✔")} Created directory: ${pc.cyan(".mcpdoctor/")}`);
     }
 
-    if (!fs.existsSync(configPath)) {
-      const configTemplate = `// @ts-check
-/** @type {import('mcp-doctor').DoctorConfig} */
+    if (createConfig) {
+      if (!fs.existsSync(configPath)) {
+        const configTemplate = `// @ts-check
+/** @type {import('@valipireddykowshik/mcpdx').DoctorConfig} */
 export default {
   rules: {
     // Core rules
@@ -200,21 +244,77 @@ export default {
   ignorePatterns: ["node_modules", "dist", ".git"],
 };
 `;
-      fs.writeFileSync(configPath, configTemplate, "utf8");
-      console.log(`  ${pc.green("✔")} Created config: ${pc.cyan("mcpdoctor.config.js")}`);
-    } else {
-      console.log(`  ${pc.dim("•")} Config file already exists at ${pc.cyan("mcpdoctor.config.js")}`);
+        fs.writeFileSync(configPath, configTemplate, "utf8");
+        console.log(`  ${pc.green("✔")} Created config: ${pc.cyan("mcpdoctor.config.js")}`);
+      } else {
+        console.log(`  ${pc.dim("•")} Config already exists at ${pc.cyan("mcpdoctor.config.js")}`);
+      }
     }
 
     console.log("");
     console.log(pc.bold("Next steps:"));
-    console.log(`  1. Wrap your server with the optional telemetry middleware:`);
+    console.log(`  1. Wrap your server with telemetry logging:`);
     console.log(
-      pc.cyan(`     import { withDoctorLogging } from "mcp-doctor";\n     const server = withDoctorLogging(new McpServer(...));`)
+      pc.cyan(`     import { withDoctorLogging } from "@valipireddykowshik/mcpdx";\n     const server = withDoctorLogging(new McpServer(...));`)
     );
-    console.log(`  2. Run completeness audit anytime with:`);
-    console.log(pc.cyan(`     npx mcp-doctor check`));
+    console.log(`  2. Audit anytime with:`);
+    console.log(pc.cyan(`     npx @valipireddykowshik/mcpdx check`));
     console.log("");
   });
+
+// Root interactive wizard when executed with no arguments
+program.action(async () => {
+  p.intro(pc.bgMagenta(pc.black(" 🩺 mcpdx — Model Context Protocol Doctor ")));
+
+  const action = await p.select({
+    message: "What would you like to do?",
+    options: [
+      { value: "check", label: "🔍 Audit MCP Server", hint: "Check schemas, error boundaries, descriptions & logs" },
+      { value: "fix", label: "⚡ Auto-Fix Issues", hint: "Automatically apply AST codemod fixes" },
+      { value: "detect", label: "📋 Inspect Fingerprint", hint: "Detect installed SDK, transports & integrations" },
+      { value: "init", label: "🚀 Setup Telemetry & Config", hint: "Initialize mcpdoctor.config.js and logging" },
+    ],
+  });
+
+  if (p.isCancel(action)) {
+    p.cancel("Goodbye!");
+    return;
+  }
+
+  const targetDir = path.resolve(".");
+
+  if (action === "check") {
+    const fp = detectProject(targetDir);
+    if (!checkMcpPresence(fp)) return;
+    const report = await runChecks({ projectDir: targetDir });
+    console.log(formatTerminalReport(report));
+  } else if (action === "fix") {
+    const previewFixes = await runFixes({ projectDir: targetDir, dryRun: true });
+    if (previewFixes.length === 0) {
+      p.note("No auto-fixable issues were detected in this MCP server.", "Fix Status");
+      return;
+    }
+    console.log(formatFixReport(previewFixes, true));
+    const proceed = await p.confirm({
+      message: `Found ${previewFixes.length} fixable issue(s). Apply these changes to disk now?`,
+      initialValue: true,
+    });
+    if (!p.isCancel(proceed) && proceed) {
+      const s = p.spinner();
+      s.start("Applying AST codemod fixes...");
+      const liveFixes = await runFixes({ projectDir: targetDir, dryRun: false });
+      s.stop("Done!");
+      console.log(formatFixReport(liveFixes, false));
+      p.outro(pc.green("✔ All changes successfully written to disk!"));
+    }
+  } else if (action === "detect") {
+    const fp = detectProject(targetDir);
+    if (checkMcpPresence(fp)) {
+      console.log(formatFingerprintReport(fp));
+    }
+  } else if (action === "init") {
+    await program.commands.find((c) => c.name() === "init")?.parseAsync(["init"], { from: "user" });
+  }
+});
 
 program.parse();
