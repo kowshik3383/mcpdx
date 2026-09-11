@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "mcp-doctor",
   "version": "0.1.0",
   "description": "Opinionated completeness auditor and runtime linter for Model Context Protocol (MCP) servers",
@@ -34,7 +34,8 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
     "commander": "^12.1.0",
