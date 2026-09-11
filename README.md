@@ -1,12 +1,13 @@
-# mcp-doctor 🩺
+# mcpdx 🩺 (mcp-doctor)
 
-[![npm version](https://img.shields.io/npm/v/mcp-doctor.svg)](https://www.npmjs.com/package/mcp-doctor)
+[![npm version](https://img.shields.io/npm/v/mcpdx.svg)](https://www.npmjs.com/package/mcpdx)
+[![CI](https://github.com/kowshik3383/mcpdx/actions/workflows/ci.yml/badge.svg)](https://github.com/kowshik3383/mcpdx/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node-18%2B-brightgreen)](https://nodejs.org)
 
-> **"mcp-doctor audits an MCP server's static schema and runtime call logs, flags missing best-practice wiring for detected integrations (Sentry, OTel, retries), and offers automated fixes."**
+> **"mcpdx audits an MCP server's static schema and runtime call logs, flags missing best-practice wiring for detected integrations (Sentry, OTel, retries), and offers automated fixes."**
 
-Think of **mcp-doctor** as a *"react-scan for MCP"* — shaped as an opinionated completeness auditor. It detects what is already wired into your Model Context Protocol server (Sentry, OpenTelemetry, Pino, Winston, etc.), evaluates your tool implementations against standard production checklists, checks runtime behavioral logs for tool loops or dead tools, and automatically applies AST codemod fixes.
+Think of **mcpdx** (executable as `mcpdx` or `mcp-doctor`) as a *"react-scan for MCP"* — shaped as an opinionated completeness auditor. It detects what is already wired into your Model Context Protocol server (Sentry, OpenTelemetry, Pino, Winston, etc.), evaluates your tool implementations against standard production checklists, checks runtime behavioral logs for tool loops or dead tools, and automatically applies AST codemod fixes.
 
 ---
 
@@ -16,17 +17,19 @@ Run directly in the root of any TypeScript or JavaScript MCP server repository w
 
 ```bash
 # 1. Fingerprint your server and detected integrations
-npx mcp-doctor detect
+npx mcpdx detect
 
 # 2. Run static completeness & structural audit
-npx mcp-doctor check
+npx mcpdx check
 
 # 3. Preview automated codemod fixes (diff preview)
-npx mcp-doctor fix --dry-run
+npx mcpdx fix --dry-run
 
 # 4. Apply automated fixes to your codebase
-npx mcp-doctor fix
+npx mcpdx fix
 ```
+
+*(Note: `npx mcp-doctor` is also supported as an alias!)*
 
 ---
 

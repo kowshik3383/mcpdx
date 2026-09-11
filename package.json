@@ -1,26 +1,44 @@
 {
-  "name": "mcp-doctor",
+  "name": "mcpdx",
   "version": "0.1.0",
   "description": "Opinionated completeness auditor and runtime linter for Model Context Protocol (MCP) servers",
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "linter",
+    "mcpdx",
     "doctor",
+    "linter",
     "audit",
     "sentry",
     "opentelemetry",
     "devtools"
   ],
-  "author": "mcp-doctor contributors",
+  "author": "kowshik3383",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
   "bin": {
+    "mcpdx": "./dist/cli.js",
     "mcp-doctor": "./dist/cli.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kowshik3383/mcpdx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kowshik3383/mcpdx/issues"
+  },
+  "homepage": "https://github.com/kowshik3383/mcpdx#readme",
   "files": [
     "dist",
     "README.md",
