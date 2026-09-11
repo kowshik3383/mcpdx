@@ -1,6 +1,6 @@
 # mcpdx 🩺 (mcp-doctor)
 
-[![npm version](https://img.shields.io/npm/v/mcpdx.svg)](https://www.npmjs.com/package/mcpdx)
+[![npm version](https://img.shields.io/npm/v/@valipireddykowshik/mcpdx.svg)](https://www.npmjs.com/package/@valipireddykowshik/mcpdx)
 [![CI](https://github.com/kowshik3383/mcpdx/actions/workflows/ci.yml/badge.svg)](https://github.com/kowshik3383/mcpdx/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node-18%2B-brightgreen)](https://nodejs.org)
@@ -17,16 +17,16 @@ Run directly in the root of any TypeScript or JavaScript MCP server repository w
 
 ```bash
 # 1. Fingerprint your server and detected integrations
-npx mcpdx detect
+npx @valipireddykowshik/mcpdx detect
 
 # 2. Run static completeness & structural audit
-npx mcpdx check
+npx @valipireddykowshik/mcpdx check
 
 # 3. Preview automated codemod fixes (diff preview)
-npx mcpdx fix --dry-run
+npx @valipireddykowshik/mcpdx fix --dry-run
 
 # 4. Apply automated fixes to your codebase
-npx mcpdx fix
+npx @valipireddykowshik/mcpdx fix
 ```
 
 *(Note: `npx mcp-doctor` is also supported as an alias!)*

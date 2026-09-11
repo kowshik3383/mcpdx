@@ -1,5 +1,5 @@
 {
-  "name": "mcpdx",
+  "name": "@valipireddykowshik/mcpdx",
   "version": "0.1.0",
   "description": "Opinionated completeness auditor and runtime linter for Model Context Protocol (MCP) servers",
   "keywords": [
