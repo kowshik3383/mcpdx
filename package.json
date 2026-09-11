@@ -28,12 +28,12 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "mcpdx": "./dist/cli.js",
-    "mcp-doctor": "./dist/cli.js"
+    "mcpdx": "dist/cli.js",
+    "mcp-doctor": "dist/cli.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kowshik3383/mcpdx.git"
+    "url": "git+https://github.com/kowshik3383/mcpdx.git"
   },
   "bugs": {
     "url": "https://github.com/kowshik3383/mcpdx/issues"
