@@ -33,6 +33,36 @@ npx @valipireddykowshik/mcpdx fix
 
 ---
 
+## 📑 Table of Contents
+
+- [Why mcpdx?](#-why-mcpdx)
+- [30-Second Quickstart](#-30-second-quickstart)
+- [Sample Audit Output](#-sample-audit-output)
+- [Core CLI Commands](#-core-cli-commands)
+- [Rule Packs Reference](#-rule-packs)
+  - [Core Structural Pack](#1-core-structural-pack-zero-dependencies-required)
+  - [Runtime Behavioral Pack](#2-runtime-behavioral-pack-requires-call-logs)
+  - [Sentry Integration Pack](#3-sentry-integration-pack-active-when-sentrynode-is-detected)
+- [Optional Runtime Telemetry Middleware](#-optional-runtime-telemetry-middleware)
+- [Comparison: mcpdx vs ESLint](#-comparison-mcpdx-vs-traditional-linters)
+- [Configuration (`mcpdoctor.config.js`)](#️-configuration-mcpdoctorconfigjs)
+- [CI/CD Automation](#-cicd-automation)
+- [Frequently Asked Questions (FAQ)](#-frequently-asked-questions-faq)
+- [License](#-license)
+
+---
+
+## 🎯 Why mcpdx?
+
+Building a Model Context Protocol (MCP) server for Claude Desktop, Cursor, or AI agents is easy to start, but difficult to harden for production:
+- **Unhandled exceptions crash the entire stdio connection**, disconnecting Claude or Cursor immediately.
+- **Unvalidated or vague tool descriptions** cause LLMs to hallucinate arguments or trigger infinite tool loops.
+- **Missing observability** leaves developers blind when an agent fails multi-turn planning in production.
+
+`mcpdx` acts as an automated doctor: it runs static AST inspections across your codebase, evaluates real runtime call logs, and patches missing error boundaries and Sentry spans with **one command**.
+
+---
+
 ## 📊 Sample Audit Output
 
 ```text
@@ -260,6 +290,63 @@ defaultRuleRegistry.register(customAuthRule);
 
 ---
 
+## ⚖️ Comparison: mcpdx vs Traditional Linters
+
+| Capability | ESLint / Biome | Manual Code Review | **mcpdx** |
+|---|:---:|:---:|:---:|
+| **MCP SDK Understanding** | ❌ File-scoped only | ⚠️ Error-prone | ✅ Full project AST walk |
+| **Tool Completeness Auditing** | ❌ None | ⚠️ Manual checklist | ✅ Automated 14-rule audit |
+| **Runtime Behavior & Dead Tools** | ❌ Static only | ❌ Hard to trace | ✅ Analyzes `.jsonl` call logs |
+| **Sentry / OTel Wiring Verification** | ❌ None | ⚠️ Often overlooked | ✅ Checklist + Missing key alerts |
+| **Automated AST Codemod Fixes** | ⚠️ Lint fixes only | ❌ Manual | ✅ One-command codemod (`fix`) |
+| **Zero-Config Execution** | ❌ Config required | ❌ N/A | ✅ Run with `npx` instantly |
+
+---
+
+## 🔄 CI/CD Automation
+
+Run `mcpdx` inside GitHub Actions to block pull requests that introduce broken MCP tool schemas or missing error boundaries:
+
+```yaml
+name: MCP Completeness Audit
+
+on: [push, pull_request]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx @valipireddykowshik/mcpdx check --json
+```
+
+**Exit Codes for CI:**
+- `0`: All checks passed clean.
+- `1`: Warnings only (e.g. description could be improved).
+- `2`: Errors found (unhandled error boundary, duplicate tool, missing schema).
+
+---
+
+## ❓ Frequently Asked Questions (FAQ)
+
+### Why do MCP servers crash or disconnect in Claude Desktop / Cursor?
+In the Model Context Protocol stdio transport, any unhandled JavaScript exception thrown inside a tool handler terminates the Node.js process or closes the standard I/O stream without sending a JSON-RPC error response. This causes Claude Desktop or Cursor to display *"Server disconnected"*. `mcpdx` flags missing `try/catch` error boundaries and can automatically patch them with `mcpdx fix`.
+
+### What causes duplicate tool calls or agent looping?
+When an AI agent invokes an MCP tool but receives ambiguous, empty, or uninformative responses, the model repeatedly attempts the same tool invocation with identical arguments. `mcpdx check --logs` detects repeated identical calls and pinpoints the responsible tool.
+
+### How do I add Sentry distributed tracing to an MCP server?
+Installing `@sentry/node` is only the first step. To trace tool latency and errors, each tool handler must be wrapped in `Sentry.startSpan()` and catch blocks must route to `Sentry.captureException()`. `mcpdx` audits this automatically and patches missing spans and breadcrumbs with `mcpdx fix`.
+
+### Does mcpdx support Python MCP servers?
+v1 focuses on Node.js / TypeScript (the primary MCP SDK reference ecosystem). Python FastMCP support is planned on our v2 roadmap!
+
+---
+
 ## 📄 License
 
-MIT © [mcp-doctor contributors](LICENSE)
+MIT © [kowshik3383](LICENSE)
