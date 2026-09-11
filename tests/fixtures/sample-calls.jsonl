@@ -1,0 +1,8 @@
+{"timestamp":"2026-09-11T10:00:00Z","tool":"query_db","argsHash":"a1b2c3d4","durationMs":45,"success":true,"sessionId":"sess-1"}
+{"timestamp":"2026-09-11T10:00:05Z","tool":"query_db","argsHash":"a1b2c3d4","durationMs":42,"success":true,"sessionId":"sess-1"}
+{"timestamp":"2026-09-11T10:00:10Z","tool":"query_db","argsHash":"a1b2c3d4","durationMs":48,"success":true,"sessionId":"sess-1"}
+{"timestamp":"2026-09-11T10:01:00Z","tool":"heavy_calculation","argsHash":"e5f6g7h8","durationMs":3800,"success":true,"sessionId":"sess-1"}
+{"timestamp":"2026-09-11T10:01:30Z","tool":"heavy_calculation","argsHash":"12345678","durationMs":4200,"success":true,"sessionId":"sess-1"}
+{"timestamp":"2026-09-11T10:02:00Z","tool":"flaky_api","argsHash":"99887766","durationMs":120,"success":false,"error":"Connection reset by peer","sessionId":"sess-2"}
+{"timestamp":"2026-09-11T10:02:05Z","tool":"flaky_api","argsHash":"99887765","durationMs":110,"success":false,"error":"503 Service Unavailable","sessionId":"sess-2"}
+{"timestamp":"2026-09-11T10:02:10Z","tool":"flaky_api","argsHash":"99887764","durationMs":115,"success":true,"sessionId":"sess-2"}

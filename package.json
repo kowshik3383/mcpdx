@@ -1,0 +1,61 @@
+﻿{
+  "name": "mcp-doctor",
+  "version": "0.1.0",
+  "description": "Opinionated completeness auditor and runtime linter for Model Context Protocol (MCP) servers",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "linter",
+    "doctor",
+    "audit",
+    "sentry",
+    "opentelemetry",
+    "devtools"
+  ],
+  "author": "mcp-doctor contributors",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "mcp-doctor": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "diff": "^7.0.0",
+    "picocolors": "^1.1.1",
+    "ts-morph": "^25.0.1"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "@types/diff": "^7.0.0",
+    "@types/node": "^22.13.9",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.7"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": ">=0.6.0"
+  },
+  "peerDependenciesMeta": {
+    "@modelcontextprotocol/sdk": {
+      "optional": true
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "sample-sentry-server",
+  "version": "1.0.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.0",
+    "@sentry/node": "^8.0.0"
+  }
+}
